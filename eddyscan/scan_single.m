@@ -40,7 +40,6 @@ function [ eddies ] = scan_single( ssh, lat, lon, date, cyc, scan_type, areamap,
     stype = get_stype();
     ctype = get_ctype();
     
-    oldpath = addpath('lib');
     switch stype
         case 1
             eddies = top_down_single(ssh, lat, lon, areamap, ctype, varargin{:});
@@ -49,15 +48,13 @@ function [ eddies ] = scan_single( ssh, lat, lon, date, cyc, scan_type, areamap,
         case 0
             scanners = {@top_down_single, @bottom_up_single};
             eddies_out = {[], []};
-            parfor i = 1:2
+            parfor i = 1:2 % potentially do in parallel
                 eddies_out{i} = scanners{i}(ssh, lat, lon, areamap, ctype, varargin{:});
             end
             eddies = get_combined_eddy_frames(eddies_out{2}, eddies_out{1}, ssh);
     end
     [eddies.Date] = deal(date);
     
-    path(oldpath);
-
     function scan_t = get_stype()
         switch scan_type
             case 'v1'

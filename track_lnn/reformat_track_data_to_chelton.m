@@ -22,7 +22,7 @@ function reformatted_data = reformat_track_data_to_chelton(eddy_dir, dates, anti
 disp('getting eddies attributes, will take a long time (about 30mins for 900 time slices)');
 
  if ~isempty(cyclonic_tracks)
-     [ cyc_amps, cyc_geospeeds, cyc_lats, cyc_lons, cyc_surface_areas ] = ...
+     [ cyc_amps, cyc_geospeeds, cyc_lats, cyc_lons, cyc_surface_areas, cyc_ids ] = ...
          get_eddy_attributes(eddy_dir, 'cyclonic', dates);
 
     cyc_eddy_counts = zeros(length(cyc_lats), 1);
@@ -31,11 +31,11 @@ disp('getting eddies attributes, will take a long time (about 30mins for 900 tim
     end
 
     cyc_eddy_track_indexes = get_eddy_track_index(cyc_eddy_counts, cyclonic_tracks);
-end
+ end
 
 % Anticyclonic attributes
 if ~isempty(anticyclonic_tracks)
-    [ ant_amps, ant_geospeeds, ant_lats, ant_lons, ant_surface_areas ] = ...
+    [ ant_amps, ant_geospeeds, ant_lats, ant_lons, ant_surface_areas, ant_ids] = ...
         get_eddy_attributes(eddy_dir, 'anticyc', dates);
 
     ant_eddy_counts = zeros(length(ant_lats), 1);
@@ -57,7 +57,7 @@ for m=1:length(ant_eddy_counts)
 end
 
 [eddies_t.x,eddies_t.y,eddies_t.amp,eddies_t.area,eddies_t.u,...
-eddies_t.area,eddies_t.Ls,eddies_t.id,eddies_t.cyc,eddies_t.track_day]=deal(nan(n_edd,1));
+eddies_t.area,eddies_t.Ls,eddies_t.id,eddies_t.ide,eddies_t.cyc,eddies_t.track_day]=deal(nan(n_edd,1));
 st=1;
 for n=1:length(dates)
     disp(['Date: ', num2str(n)]);
@@ -71,6 +71,7 @@ for n=1:length(dates)
     eddies_t.cyc(st:ant_eddy_counts(n)+st-1)=1;
     eddies_t.track_day(st:ant_eddy_counts(n)+st-1)=dates(n);
     eddies_t.id(st:ant_eddy_counts(n)+st-1)=ant_eddy_track_indexes{n};
+    eddies_t.ide(st:ant_eddy_counts(n)+st-1)=ant_ids{n};
 
     st=st+ant_eddy_counts(n);
     disp(['grabbing cyc eddies from ', num2str(st), ' to ', num2str(cyc_eddy_counts(n)+st-1)]);
@@ -83,6 +84,7 @@ for n=1:length(dates)
     eddies_t.cyc(st:cyc_eddy_counts(n)+st-1)=-1;
     eddies_t.track_day(st:cyc_eddy_counts(n)+st-1)=dates(n);
     eddies_t.id(st:cyc_eddy_counts(n)+st-1)=max_acid+cyc_eddy_track_indexes{n};
+    eddies_t.ide(st:cyc_eddy_counts(n)+st-1)=cyc_ids{n};
 
     st=st+cyc_eddy_counts(n);
 end
@@ -97,11 +99,12 @@ eddies_t.Ls(ii)=[];
 eddies_t.cyc(ii)=[];
 eddies_t.track_day(ii)=[];
 eddies_t.id(ii)=[];
+eddies_t.ide(ii)=[];
 
 reformatted_data = eddies_t;
 end
 
-function [ amps, geospeeds, lats, lons, surface_areas ] = get_eddy_attributes( eddy_dir, eddy_file_initial, dates)
+function [ amps, geospeeds, lats, lons, surface_areas, ids] = get_eddy_attributes( eddy_dir, eddy_file_initial, dates)
 %GET_EDDY_ATTRIBUTES Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -110,14 +113,18 @@ geospeeds = cell(size(dates));
 lats = cell(size(dates));
 lons = cell(size(dates));
 surface_areas = cell(size(dates));
+ids = cell(size(dates));
 for i = 1:length(dates)
     disp(i)
+    
     try
-        temp = load([eddy_dir eddy_file_initial '_' num2str(dates(i)) '.mat']);
+        tmp = strtrim(ls([eddy_dir,eddy_file_initial,'_*',num2str(dates(i)),'.mat']));
+        temp = load(tmp);
     catch
         disp(['Error loading file: ', eddy_dir, eddy_file_initial, '_', num2str(dates(i)), '.mat']);
         continue;
     end
+    
     names = fieldnames(temp);
     if length(names) == 1
         eddies = temp.(names{1});
@@ -127,6 +134,7 @@ for i = 1:length(dates)
     surface_areas{i} = [eddies.SurfaceArea];
     lats{i} = [eddies.Lat];
     lons{i} = [eddies.Lon];
+    ids{i} = [1:length(eddies)];
 end
 end
 
