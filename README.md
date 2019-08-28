@@ -13,4 +13,5 @@ The script [sample_application.m](sample_application.m) exemplifies a standard a
 1. [scan_single.m](eddyscan/scan_single.m) in the directory eddyscan identifies eddies based on the input field such as SSH anomalies.
 2. [tolerance_track_lnn.m](track_lnn/tolerance_track_lnn.m) tracks identified eddies over time, allowing for eddies to "disappear" for a few conecutive time steps.
 3. [reformat_track_data_to_chelton.m](track_lnn/reformat_track_data_to_chelton.m) reformats data to a "matrix-style" format, similar to the one the Chelton-data set offers.
+
 If you pull the repository the script should just run. It uses sample data provided in the data directory and produces sample plots in the output plot directory.
